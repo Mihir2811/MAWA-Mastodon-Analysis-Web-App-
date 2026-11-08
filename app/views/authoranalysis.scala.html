@@ -1,0 +1,160 @@
+@*
+ * Author analysis page: summary cards, ranked author table and language breakdown.
+ * @author Kush Chaudhari
+ *@
+@(hashtag: String, stats: java.util.List[models.AuthorStat], errorMessage: java.util.Optional[String], totalPosts: Int, page: Int, maxId: java.util.Optional[String], minId: java.util.Optional[String])
+@import java.util.Optional
+
+@main("Author Analysis for #" + hashtag + " (Page " + page + ")") {
+  <div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-1">
+            <li class="breadcrumb-item"><a href="@routes.HomeController.index()">Home</a></li>
+            <li class="breadcrumb-item"><a href="@routes.HomeController.search(hashtag, Optional.empty(), Optional.empty(), 1)">#@hashtag</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Author Analysis</li>
+          </ol>
+        </nav>
+        <h1 class="h2 mb-1">Author Analysis for <span class="text-primary">#@hashtag</span></h1>
+        <p class="text-muted mb-0">Page @page · based on @totalPosts post(s) shown in these search results</p>
+      </div>
+      <a href="@routes.HomeController.search(hashtag, maxId, minId, page)" class="btn btn-outline-secondary">
+        ← Back to Posts
+      </a>
+    </div>
+  </div>
+
+  @if(errorMessage.isPresent) {
+    <div class="alert alert-danger shadow-sm my-4" role="alert">
+      <h4 class="alert-heading">Unable to Load Author Analysis</h4>
+      <p class="mb-0">@errorMessage.get()</p>
+    </div>
+  } else {
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <div class="text-muted small text-uppercase fw-bold">Posts analyzed</div>
+            <div class="display-6 fw-bold text-primary">@totalPosts</div>
+            <div class="small text-muted">On search results page @page</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <div class="text-muted small text-uppercase fw-bold">Active authors</div>
+            <div class="display-6 fw-bold text-success">@stats.size()</div>
+            <div class="small text-muted">Distinct authors on this page</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <div class="text-muted small text-uppercase fw-bold">Leading contribution</div>
+            @if(stats.isEmpty || totalPosts == 0) {
+              <div class="display-6 fw-bold text-secondary">: </div>
+              <div class="small text-muted">No author activity to rank</div>
+            } else {
+              @defining(stats.get(0)) { leader =>
+                @defining(java.lang.String.format(java.util.Locale.ROOT, "%.1f",
+                    java.lang.Double.valueOf((leader.getPostCount.toDouble / totalPosts.toDouble) * 100.0))) { share =>
+                  <div class="display-6 fw-bold text-primary">@share%</div>
+                  <div class="small text-muted">@leader.getAuthor.getDisplayName · @leader.getPostCount post(s)</div>
+                }
+              }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    @if(stats.isEmpty) {
+      <div class="alert alert-info shadow-sm text-center py-5 my-4">
+        <h4 class="alert-heading">No author data available</h4>
+        <p class="text-muted mb-0">No authors were found in the posts on page @page for <strong>#@hashtag</strong>.</p>
+      </div>
+    } else {
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+          <h2 class="h5 card-title mb-1 fw-bold">Authors on Page @page</h2>
+          <small class="text-muted">Ranked by post count. Activity and language details reflect this page only.</small>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Author</th>
+                <th scope="col">Posts and page share</th>
+                <th scope="col">Latest post on this page</th>
+                <th scope="col">Languages</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for((stat, index) <- stats.zipWithIndex) {
+                <tr>
+                  <td class="text-muted small">@(index + 1)</td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      @if(!stat.getAuthor.getAvatar.isEmpty) {
+                        <img src="@stat.getAuthor.getAvatar" alt="@stat.getAuthor.getUsername avatar" class="post-avatar me-3 border">
+                      } else {
+                        <div class="post-avatar me-3 bg-secondary text-white d-flex align-items-center justify-content-center fw-bold">
+                          @stat.getAuthor.getUsername.take(1).toUpperCase
+                        </div>
+                      }
+                      <div>
+                        @if(!stat.getAuthor.getUrl.isEmpty) {
+                          <a href="@stat.getAuthor.getUrl" target="_blank" rel="noopener noreferrer" class="fw-semibold">
+                            @stat.getAuthor.getDisplayName
+                          </a>
+                        } else {
+                          <span class="fw-semibold">@stat.getAuthor.getDisplayName</span>
+                        }
+                        <div class="text-muted small">@@@stat.getAuthor.getUsername</div>
+                        <div class="text-muted small">Account ID: @stat.getAuthor.getId</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    @if(totalPosts > 0) {
+                      @defining(java.lang.String.format(java.util.Locale.ROOT, "%.1f",
+                          java.lang.Double.valueOf((stat.getPostCount.toDouble / totalPosts.toDouble) * 100.0))) { share =>
+                        <div class="fw-semibold">@stat.getPostCount post(s) · @share%</div>
+                        <div class="progress mt-2" style="height: 6px;" aria-label="@share% of page posts">
+                          <div class="progress-bar" role="progressbar" style="width: @share%"
+                               aria-valuenow="@share" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                      }
+                    }
+                  </td>
+                  <td>
+                    <div class="small text-muted">@stat.getLatestPost.getCreatedAt</div>
+                    @if(!stat.getLatestPost.getUrl.isEmpty) {
+                      <a href="@stat.getLatestPost.getUrl" target="_blank" rel="noopener noreferrer" class="small">
+                        View latest post ↗
+                      </a>
+                    }
+                    @if(!stat.getLatestPost.getContent.isEmpty) {
+                      <div class="small mt-1 author-post-excerpt">@stat.getLatestPost.getContent.take(140)</div>
+                    }
+                  </td>
+                  <td>
+                    @for(language <- stat.getLanguages) {
+                      <span class="badge bg-light text-dark border me-1 mb-1">
+                        @language.toUpperCase · @stat.getLanguageCounts.get(language)
+                      </span>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  }
+}

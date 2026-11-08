@@ -1,0 +1,30 @@
+@*
+ * Legacy word-statistics table view.
+ * @author Qiang Xue
+ *@
+@(words: List[java.util.Map.Entry[String, Long]])
+
+@main("Top Authors") {
+
+<h1>Word Statistics</h1>
+
+<p>
+    <a href="/">Back to Home</a>
+</p>
+
+<table border="1" cellpadding="5">
+    <tr>
+        <th>Rank</th>
+        <th>Word</th>
+        <th>Other</th>
+    </tr>
+
+    @for((author, index) <- words.zipWithIndex) { <tr>
+        <td>@(index + 1)</td>
+        <td>@author.getKey()</td>
+        <td>@author.getValue()</td>
+        </tr>
+        }
+</table>
+
+}

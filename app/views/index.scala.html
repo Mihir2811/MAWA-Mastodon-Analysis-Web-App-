@@ -1,0 +1,37 @@
+@*
+ * Home page: basic search form and Bootstrap layout.
+ * @author Qiang Xue
+ *@
+@()
+@import java.util.Optional
+
+@main("Home") {
+  <div class="row justify-content-center py-5">
+    <div class="col-md-8 col-lg-6 text-center">
+      <div class="mb-4">
+        <h1 class="display-5 fw-bold text-dark">Mastodon Hashtag Search</h1>
+        <p class="text-muted fs-5">Monitor and analyze posts across the fediverse in real-time.</p>
+      </div>
+
+      <div class="card shadow-sm p-4 border-0">
+        <form action="@routes.HomeController.search("", Optional.empty(), Optional.empty(), 1)" method="GET">
+          <div class="mb-3 text-start">
+            <label for="hashtag" class="form-label fw-semibold">Enter Hashtag (without #):</label>
+            <div class="input-group input-group-lg">
+              <span class="input-group-text bg-light text-muted">#</span>
+              <input type="text"
+                     class="form-control"
+                     id="hashtag"
+                     name="hashtag"
+                     placeholder="java"
+                     required
+                     autofocus />
+              <button class="btn btn-primary px-4" type="submit">Search</button>
+            </div>
+            <div class="form-text">Letters, digits and underscores only: e.g. <code>java</code>, <code>technology</code>, <code>scala</code>, <code>opensource</code></div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

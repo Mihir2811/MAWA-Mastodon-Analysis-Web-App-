@@ -1,0 +1,50 @@
+/*
+ * MAWA - application styles.
+ * Bootstrap 5 is loaded from the CDN in main.scala.html.
+ *
+ * Basic page layout, navigation and shared typography: @author Qiang Xue
+ * Post cards, avatars and attachment and card styles: @author Owen Van Esbroeck
+ */
+
+/* Basic page layout: @author Qiang Xue */
+body {
+    background-color: #f8f9fa;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Navigation bar: @author Qiang Xue */
+.navbar-brand {
+    font-weight: 700;
+    color: #5b21b6 !important;
+}
+
+/* Post card, avatar and attachment styles: @author Owen Van Esbroeck */
+.post-card {
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.post-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Cleaned post text, preserving the author's line breaks: @author Qiang Xue */
+.post-content {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    color: #2d3748;
+}
+
+/* Author analysis excerpt styles: @author Qiang Xue */
+.author-post-excerpt {
+    max-width: 24rem;
+    color: #4a5568;
+}
+

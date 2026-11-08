@@ -1,0 +1,11 @@
+logs
+target
+.env
+/.bsp
+/.idea
+/.idea_modules
+/.classpath
+/.settings
+/.metals
+/.vscode
+/RUNNING_PID

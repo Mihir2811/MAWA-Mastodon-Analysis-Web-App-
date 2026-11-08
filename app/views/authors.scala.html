@@ -1,0 +1,30 @@
+@*
+ * Legacy top-authors table view.
+ * @author Kush Chaudhari
+ *@
+@(authors: List[java.util.Map.Entry[String, Long]])
+
+@main("Top Authors") {
+
+<h1>Top Authors</h1>
+
+<p>
+    <a href="/">Back to Home</a>
+</p>
+
+<table border="1" cellpadding="5">
+    <tr>
+        <th>Rank</th>
+        <th>Author</th>
+        <th>Posts</th>
+    </tr>
+
+    @for((author, index) <- authors.zipWithIndex) { <tr>
+        <td>@(index + 1)</td>
+        <td>@author.getKey()</td>
+        <td>@author.getValue()</td>
+        </tr>
+        }
+</table>
+
+}

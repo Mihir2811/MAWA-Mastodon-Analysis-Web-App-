@@ -1,0 +1,105 @@
+@*
+ * Word statistics page: totals, frequency table and shared Bootstrap layout.
+ * @author Qiang Xue
+ *@
+@(hashtag: String, stats: java.util.List[models.WordStat], errorMessage: java.util.Optional[String], page: Int, maxId: java.util.Optional[String], minId: java.util.Optional[String])
+@import java.util.Optional
+
+@pageLabel = @{ if(page > 1) " (Page " + page + ")" else "" }
+
+@main("Word Statistics for #" + hashtag) {
+  <div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+      <div>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb mb-1">
+            <li class="breadcrumb-item"><a href="@routes.HomeController.index()">Home</a></li>
+            <li class="breadcrumb-item"><a href="@routes.HomeController.search(hashtag, Optional.empty(), Optional.empty(), 1)">#@hashtag</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Word Statistics@pageLabel</li>
+          </ol>
+        </nav>
+        <h1 class="h2 mb-0">Word Statistics for <span class="text-primary">#@hashtag</span>@pageLabel</h1>
+      </div>
+      <div>
+        <a href="@routes.HomeController.search(hashtag, maxId, minId, page)" class="btn btn-outline-secondary">
+          ← Back to Posts
+        </a>
+      </div>
+    </div>
+  </div>
+
+  @if(errorMessage.isPresent) {
+    <div class="alert alert-danger shadow-sm my-4" role="alert">
+      <h4 class="alert-heading">⚠️ Unable to Load Statistics</h4>
+      <p class="mb-0">@errorMessage.get()</p>
+    </div>
+  } else {
+    @defining(stats.stream().mapToLong((s: models.WordStat) => s.getCount).sum()) { totalOccurrences =>
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <div class="card shadow-sm border-0 text-center p-3">
+            <div class="text-muted small text-uppercase fw-bold">Total Words Counted</div>
+            <div class="display-6 fw-bold text-primary mt-1">@totalOccurrences</div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card shadow-sm border-0 text-center p-3">
+            <div class="text-muted small text-uppercase fw-bold">Unique Words</div>
+            <div class="display-6 fw-bold text-success mt-1">@stats.size()</div>
+          </div>
+        </div>
+      </div>
+
+      @if(stats.isEmpty) {
+        <div class="alert alert-info shadow-sm text-center py-5 my-4">
+          <h4 class="alert-heading">No word data available</h4>
+          <p class="text-muted mb-0">No posts or text content were found to compute statistics for <strong>#@hashtag</strong>@pageLabel.</p>
+        </div>
+      } else {
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-white py-3">
+            <h5 class="card-title mb-0 fw-bold">Unique Words Frequency (Descending)</h5>
+            <small class="text-muted">Computed from the posts shown on page @page of the search results.</small>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col" style="width: 10%">#</th>
+                  <th scope="col" style="width: 50%">Word</th>
+                  <th scope="col" style="width: 20%">Count</th>
+                  <th scope="col" style="width: 20%">Frequency Share</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for((stat, index) <- stats.zipWithIndex) {
+                  <tr>
+                    <td class="text-muted small">@(index + 1)</td>
+                    <td class="fw-semibold">@stat.getWord</td>
+                    <td>
+                      <span class="badge bg-primary rounded-pill px-3 py-2 fs-6">
+                        @stat.getCount
+                      </span>
+                    </td>
+                    <td>
+                      @if(totalOccurrences > 0) {
+                        @defining(java.lang.String.format("%.1f", java.lang.Double.valueOf((stat.getCount.toDouble / totalOccurrences.toDouble) * 100.0))) { pct =>
+                          <div class="d-flex align-items-center">
+                            <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                              <div class="progress-bar bg-info" role="progressbar" style="width: @pct%" aria-valuenow="@pct" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <span class="small text-muted">@pct%</span>
+                          </div>
+                        }
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    }
+  }
+}

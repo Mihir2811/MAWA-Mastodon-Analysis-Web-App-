@@ -1,0 +1,21 @@
+# Routes
+# This file defines all application routes (higher priority routes first).
+# Documentation: https://www.playframework.com/documentation/latest/JavaRouting
+
+# ---- Pages ---------------------------------------------------------------------
+# Home page with the hashtag search form
+GET     /                           controllers.HomeController.index()
+
+# Search results, one page at a time.
+#   max_id -> next (older) page, min_id -> previous (newer) page, page -> 1-based number
+GET     /search                     controllers.HomeController.search(hashtag: String, max_id: java.util.Optional[String], min_id: java.util.Optional[String], page: Int ?= 1)
+
+# Word statistics for the page identified by the same max_id / min_id / page values
+GET     /wordstats                  controllers.HomeController.wordStats(hashtag: String, max_id: java.util.Optional[String], min_id: java.util.Optional[String], page: Int ?= 1)
+
+# Author contributions for the page identified by the same max_id / min_id / page values
+GET     /authoranalysis             controllers.HomeController.authorAnalysis(hashtag: String, max_id: java.util.Optional[String], min_id: java.util.Optional[String], page: Int ?= 1)
+
+# ---- Static assets -------------------------------------------------------------
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

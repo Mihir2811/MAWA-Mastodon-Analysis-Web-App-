@@ -1,0 +1,203 @@
+@*
+ * Search results page.
+ * Basic layout, search form, card frame and pagination: @author Qiang Xue
+ * Post cards, attachments and link preview cards: @author Owen Van Esbroeck
+ *@
+@(result: models.SearchResult, analysis: models.StatisticalAnalysis)
+@import java.util.Optional
+
+@main(if(result.getHashtag.isEmpty) "Search" else "#" + result.getHashtag) {
+  <div class="row mb-4">
+    <div class="col-12">
+      <!-- Search Bar to search again -->
+      <form action="@routes.HomeController.search("", Optional.empty(), Optional.empty(), 1)" method="GET" class="d-flex align-items-center">
+        <div class="input-group">
+          <span class="input-group-text bg-white">#</span>
+          <input type="text"
+                 class="form-control"
+                 name="hashtag"
+                 value="@result.getHashtag"
+                 placeholder="Search another hashtag..."
+                 required />
+          <button class="btn btn-primary" type="submit">Search</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  @if(result.hasError) {
+    <!-- Error Alert -->
+    <div class="alert alert-danger shadow-sm my-4" role="alert">
+      <h4 class="alert-heading">⚠️ Search Failed</h4>
+      <p class="mb-0">@result.getErrorMessage.orElse("Unable to retrieve posts from Mastodon. Please try again later.")</p>
+    </div>
+    <div class="text-center mt-3">
+      <a href="@routes.HomeController.index()" class="btn btn-outline-secondary">← Back to Home</a>
+    </div>
+  } else {
+    <!-- Word statistics for exactly the page currently displayed (same max_id / min_id / page) -->
+    @defining(routes.HomeController.wordStats(result.getHashtag, result.getPageMaxId, result.getPageMinId, result.getPage)) { wordStatsCall =>
+      <!-- Search Header -->
+        <div>
+          <h2 class="h3 mb-0 text-dark">
+            Posts for <a href="@wordStatsCall" class="text-primary text-decoration-underline" title="View word statistics for this page">#@result.getHashtag</a>
+          </h2>
+          <small class="text-muted">
+            Page <span id="page-number">@result.getPage</span> |
+            Retrieved <span id="post-count">@result.getPosts.size</span> post(s) |
+            <a href="@wordStatsCall" id="word-stats-link-inline" class="text-secondary">View word statistics</a>
+          </small>
+        </div>
+        @* Author analysis entry point: @author Kush Chaudhari *@
+        <div>
+          <a href="@routes.HomeController.authorAnalysis(result.getHashtag, result.getPageMaxId, result.getPageMinId, result.getPage)"
+             id="author-analysis-btn" class="btn btn-sm btn-outline-primary me-2">
+            Analyze Authors on This Page
+          </a>
+          <a href="@wordStatsCall" id="word-stats-btn" class="btn btn-sm btn-outline-primary me-2">
+            Word Stats
+          </a>
+          <a href="@routes.HomeController.index()" class="btn btn-sm btn-outline-secondary">New Search</a>
+        </div>
+      </div>
+      <br>
+      @* Statistical analysis chart panels: @author Owen Van Esbroeck *@
+      <div class="row g- mb-4" >
+      <div class="col-md-6 d-flex">
+            <div id="sentiment-div" data-sentiments=@analysis.getSentimentCountsAsJSON style="width: 250px; height: 250px;">
+              <canvas id="sentiment-chart"></canvas>
+            </div>
+            <div id="language-div" data-languages=@analysis.getLanguageCountsAsJSON style="width: 250px; height: 250px;">
+              <canvas id="language-chart"></canvas>
+            </div>
+            <div id="visibility-div" data-visibility=@analysis.getVisibilityCountsAsJSON style="width: 250px; height: 250px;">
+              <canvas id="visibility-chart"></canvas>
+            </div>
+            <div id="engagement-div" data-engagement=@analysis.getEngagmentCountsAsJSON style="width: 250px; height: 250px;">
+              <canvas id="engagement-chart"></canvas>
+            </div>
+
+      </div>
+      </div>
+      @if(result.isEmpty) {
+        <!-- Empty Results Notification -->
+        <div class="alert alert-info shadow-sm text-center py-5 my-4" role="alert">
+          <h4 class="alert-heading mb-3">No posts found</h4>
+          <p class="text-muted mb-4">There are currently no public posts with the hashtag <strong>#@result.getHashtag</strong> on this instance.</p>
+          <a href="@routes.HomeController.search(result.getHashtag, Optional.empty(), Optional.empty(), 1)" class="btn btn-outline-secondary me-2">← Back to Page 1</a>
+          <a href="@routes.HomeController.index()" class="btn btn-primary">Try Another Hashtag</a>
+        </div>
+      } else {
+        <!-- Posts List -->
+        @for(post <- result.getPosts) {
+          <article class="post-card p-3 p-md-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="d-flex align-items-center">
+                @if(!post.getAuthor.getAvatar.isEmpty) {
+                  <img src="@post.getAuthor.getAvatar" alt="@post.getAuthor.getUsername avatar" class="post-avatar me-3 border">
+                } else {
+                  <div class="post-avatar me-3 bg-secondary text-white d-flex align-items-center justify-content-center fw-bold">
+                    @post.getAuthor.getUsername.take(1).toUpperCase
+                  </div>
+                }
+                <div>
+                  <div class="fw-bold text-dark">
+                    @post.getAuthor.getDisplayName
+                    <span class="text-muted fw-normal small ms-1">@@@post.getAuthor.getUsername</span>
+                  </div>
+                  <div class="text-muted small">
+                    Published: @post.getCreatedAt
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-end">
+                <span class="badge bg-light text-dark border me-1" title="# replies">@post.getRepliesCount 💬</span>
+                <span class="badge bg-light text-dark border me-1" title="# reblogs">@post.getReblogsCount 🔁</span>
+                <span class="badge bg-light text-dark border me-1" title="# favourites">@post.getFavouritesCount ❤️</span>
+                @* Sentiment badge: @author Mihir Vipulbhai Panchal *@
+                <span class="badge bg-light text-dark border me-1" title="sentiment">@post.getSentiment</span>
+                <span class="badge bg-light text-dark border me-1">@post.getLanguage.toUpperCase</span>
+                <span class="badge bg-secondary">@post.getVisibility</span>
+              </div>
+            </div>
+
+            <!-- Clean, readable post text -->
+            <div class="post-content mb-3">
+              @post.getContent
+            </div>
+
+            @* Image and video attachment display: @author Owen Van Esbroeck *@
+            @if(!post.getAttachments.isEmpty) {
+            <div class="pt-2" style="align-items: center">
+              @for(attachment <- post.getAttachments) {
+                	@if(attachment.isImage) {
+					         <img src=@attachment.getUrl alt=@attachment.getDescription width=@attachment.getWidth height=@attachment.getHeight>
+                    }
+					        @if(attachment.isVideo) {
+					          <video width=@attachment.getWidth height=@attachment.getHeight controls poster=@attachment.getPreviewUrl>
+						          <source src=@attachment.getUrl type=@attachment.videoType>
+					          </video>
+					        }
+                }
+            </div> }
+			      @* Link preview card: @author Owen Van Esbroeck *@
+			      @if(post.hasCard) { @defining(post.getCard()) { card =>
+            <div class="card shadow-lg border-0 h-80">
+              <div class="card-body row g-2">
+				        <div class="col-md-2"><img src=@card.getImage width=150 height=150></div>
+				        <div class="col-md-6">
+					        <div ><h5><a href=@card.getUrl> @card.getTitle </a></h5></div>
+					        <div class="" >@card.getDescription</div>
+				        </div>
+              </div>
+            </div>
+			      }}
+            <div class="pt-2 border-top d-flex justify-content-between align-items-center">
+             <span class="text-muted small">ID: @post.getId</span>
+              @if(!post.getUrl.isEmpty) {
+                <a href="@post.getUrl" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
+                  View on Mastodon ↗
+                </a>
+              }
+            </div>
+          </article>
+        }
+      }
+    }
+
+    <!-- Page navigation: [ Previous ]  Page N  [ Next ] -->
+    @* Pagination controls: @author Qiang Xue *@
+    @if(!result.isEmpty) {
+      <nav aria-label="Search result pages" class="my-4">
+        <ul class="pagination justify-content-center align-items-center">
+          @if(result.hasPrevious) {
+            <li class="page-item">
+              <a class="page-link" id="previous-page-link" rel="prev"
+                 href="@routes.HomeController.search(result.getHashtag, Optional.empty(), result.getPrevMinId, result.getPage - 1)">← Previous</a>
+            </li>
+          } else {
+            <li class="page-item disabled">
+              <span class="page-link">← Previous</span>
+            </li>
+          }
+
+          <li class="page-item active" aria-current="page">
+            <span class="page-link">Page @result.getPage</span>
+          </li>
+
+          @if(result.hasNext) {
+            <li class="page-item">
+              <a class="page-link" id="next-page-link" rel="next"
+                 href="@routes.HomeController.search(result.getHashtag, result.getNextMaxId, Optional.empty(), result.getPage + 1)">Next →</a>
+            </li>
+          } else {
+            <li class="page-item disabled">
+              <span class="page-link">Next →</span>
+            </li>
+          }
+        </ul>
+      </nav>
+    }
+  }
+}
