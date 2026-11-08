@@ -510,5 +510,4 @@ posts.stream()
 - **Language filtering:** the Mastodon REST API has no server-side language filter for hashtag timelines. The page shows each post's `language` value as the API returns it.
 - **Rate limits:** public instances rate-limit unauthenticated traffic. Configuring `MASTODON_ACCESS_TOKEN` is recommended for frequent searches and demos.
 - **Coverage tooling:** `sbt-jacoco` 3.7.0 instruments JDK 25 classes; `sbt jacoco` reports 100% line, branch, method, complexity and class coverage for all included production classes.
-#   M A W A - M a s t o d o n - A n a l y s i s - W e b - A p p -  
- 
+#
